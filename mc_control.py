@@ -1,24 +1,8 @@
 import numpy as np
-from collections import defaultdict
 from easy21 import Env
+from collections import defaultdict
 import utils
-
-
-def epsilon_greedy(state, Q, epsilon, nA):
-    """
-    Uses an epsilon-greedy policy based on a given Q-function and epsilon to choose probability distribution of
-    actions based on a state
-
-    :param state: the agent's view of the environment at one timestep
-    :param Q: state-action to value map
-    :param epsilon: probability that the selects a random action, else a greedy action
-    :param nA: number of possible actions
-    :return: probability distribution of all actions for the state
-    """
-    A = np.ones(nA, dtype=float) * epsilon / nA
-    best_action = np.argmax(Q[state])
-    A[best_action] += (1.0 - epsilon)
-    return A
+import dill as pickle
 
 
 def mc_control(env, num_episodes, gamma=1.0, No=100):
@@ -29,7 +13,8 @@ def mc_control(env, num_episodes, gamma=1.0, No=100):
     :param num_episodes: number of episodes to sample
     :param gamma: discount factor
     :param epsilon: probability that the policy chooses a random action at any given moment.
-    :return: tuple containing final Q table and policy
+    :param No: Determines scale of epsilon and learning rate
+    :return: Default dict representation of the Q table
     """
 
     returns_sum = defaultdict(float)
@@ -38,7 +23,7 @@ def mc_control(env, num_episodes, gamma=1.0, No=100):
 
     Q = defaultdict(lambda: np.zeros(len(env.action_space)))
 
-    for e in range(num_episodes):
+    for _ in range(num_episodes):
         episode = []
         state = env.reset()
         done = False
@@ -46,7 +31,7 @@ def mc_control(env, num_episodes, gamma=1.0, No=100):
             s_count_online[state] += 1
             epsilon = No / (No + s_count_online[state])
 
-            probs = epsilon_greedy(state, Q, epsilon, len(env.action_space))
+            probs = utils.epsilon_greedy(state, Q, epsilon, len(env.action_space))
             actionIdx = np.random.choice(np.arange(len(probs)), p=probs)
             action = env.action_space[actionIdx]
 
@@ -70,31 +55,34 @@ def mc_control(env, num_episodes, gamma=1.0, No=100):
     return Q
 
 
-env = Env()
-print("Starting training.")
-Q = mc_control(env, num_episodes=100000, gamma=0.7)
-print("Training finished.\n")
+if __name__ == "__main__":
+    env = Env()
+    print("Training.")
+    Q = mc_control(env, num_episodes=1000000)
+    print()
 
-iterations = 10000
-wins = 0
-print("Starting testing.")
-for _ in range(iterations):
-    state = env.reset()
-    while True:
-        probs = epsilon_greedy(state, Q, epsilon=0, nA=len(env.action_space))
-        actionIdx = np.random.choice(np.arange(len(probs)), p=probs)
-        action = env.action_space[actionIdx]
+    iterations = 10000
+    wins = 0
+    print("Testing.")
+    for _ in range(iterations):
+        state = env.reset()
+        while True:
+            probs = utils.epsilon_greedy(state, Q, epsilon=0, nA=len(env.action_space))
+            actionIdx = np.random.choice(np.arange(len(probs)), p=probs)
+            action = env.action_space[actionIdx]
 
-        nextState, reward, done = env.step(action)
+            nextState, reward, done = env.step(action)
 
-        if done:
-            wins += 1 if reward == 1 else 0
-            break
+            if done:
+                wins += 1 if reward == 1 else 0
+                break
 
-        state = nextState
+            state = nextState
 
-score = wins / iterations * 100
-print("Testing finished.\n")
-print(f"Percentage of wins against dealer over {iterations} games: {score}.")
+    score = wins / iterations * 100
+    print()
+    print(f"Percentage of wins against dealer over {iterations} games: {score}.")
 
-utils.plot(Q, np.arange(len(env.action_space)))
+    pickle.dump(Q, open('Q.dill', 'wb'))
+
+    utils.plotQ(Q, np.arange(len(env.action_space)))

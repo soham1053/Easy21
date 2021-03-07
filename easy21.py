@@ -7,7 +7,9 @@ class Env:
 
     def reset(self):
         """
-        :return: Resets the environment, initializing the state and reward
+        Resets the environment, initializing the state and reward
+
+        :return: The initial state
         """
         player_start = np.random.randint(1, 11)
         self.state = (np.random.randint(1, 11), player_start)
@@ -32,20 +34,16 @@ class Env:
 
     def step(self, action):
         """
-        :param s: state -- dealer's first card 1-10 and player's sum 1-21
-        :param a: action -- hit or stick
-        :return: sample of next state (which may be terminal if game is finished) and reward
+        :param action: action -- hit or stick
+        :return: sample of next state, reward, and whether the episode terminated
         """
-        if self.state == 'terminal':
-            print('The game has already ended.')
-            return 'terminal', 0
 
         if action == 'hit':
             card_val = self.draw(player_turn=True)
             player_sum = self.state[1] + card_val
             self.state = (self.state[0], player_sum)
             if player_sum > 21 or player_sum < 1:
-                return self.state, -1, 'terminal'
+                return self.state, -1, True
             else:
                 return self.state, 0, False
 
@@ -58,12 +56,12 @@ class Env:
             self.state = (dealer_sum, self.state[1])
 
             if dealer_sum > 21 or dealer_sum < 1:
-                return self.state, 1, 'terminal'
+                return self.state, 1, True
 
             player_sum = self.state[1]
             if player_sum > dealer_sum:
-                return self.state, 1, 'terminal'
+                return self.state, 1, True
             elif player_sum == dealer_sum:
-                return self.state, 0, 'terminal'
+                return self.state, 0, True
             elif player_sum < dealer_sum:
-                return self.state, -1, 'terminal'
+                return self.state, -1, True
