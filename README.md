@@ -9,9 +9,12 @@ Credits to timbmg for plotQ and plotMseEpisodesLambdas in utils.py (https://gith
 ## Results of Each Algorithm
 
 ### Monte Carlo Control (Every Visit)
-<img src="monte-carlo-value.png" width="1000">
+After training over 10 million episodes, the value function:
+<img src="imgs/monte-carlo-value.png" width="800">
 
 ### Sarsa(lambda)
-<img src="td-mse-lambda.png" width="1000">
+After training over 10,000 episodes per lambda in {0, 0.1, 0.2, ..., 1}, MSE between Q(sarsa) and QStar(monte carlo result) per lambda:
+<img src="imgs/td-mse-lambda.png" width="800">
 
-<img src="td-mse-episode-lambda.png" width="1000">
+MSE throughout training per lambda:
+<img src="imgs/td-mse-episode-lambda.png" width="800">
