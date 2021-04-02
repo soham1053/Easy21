@@ -68,7 +68,7 @@ def plotMseLambdas(mse, lambds):
     :param lambds: each lambda value
     """
 
-    plt.plot(lambds, mse)
+    plt.scatter(lambds, mse)
     plt.title("Lambda vs MSE")
     plt.xlabel("Lambda")
     plt.ylabel("Mean Squared Error")
