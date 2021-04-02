@@ -31,7 +31,7 @@ def mc_control(env, num_episodes, gamma=1.0, No=100):
             s_count_online[state] += 1
             epsilon = No / (No + s_count_online[state])
 
-            probs = utils.epsilon_greedy(state, Q, epsilon, len(env.action_space))
+            probs = utils.epsilon_greedy_table(state, Q, epsilon, len(env.action_space))
             actionIdx = np.random.choice(np.arange(len(probs)), p=probs)
             action = env.action_space[actionIdx]
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     for _ in range(iterations):
         state = env.reset()
         while True:
-            probs = utils.epsilon_greedy(state, Q, epsilon=0, nA=len(env.action_space))
+            probs = utils.epsilon_greedy_table(state, Q, epsilon=0, nA=len(env.action_space))
             actionIdx = np.random.choice(np.arange(len(probs)), p=probs)
             action = env.action_space[actionIdx]
 

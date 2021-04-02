@@ -7,8 +7,9 @@ import dill as pickle
 NUM_EPISODES = 10000
 GAMMA = 1.0
 NO = 100
+MSE_UPDATE = 1
 
-def sarsa_lambda(env, lambd, QStar, num_episodes=NUM_EPISODES, gamma=GAMMA, No=NO):
+def sarsa_lambda(env, lambd, QStar, num_episodes=NUM_EPISODES, gamma=GAMMA, No=NO, mse_update=MSE_UPDATE):
     """
     Sarsa Lambda Control that finds the optimal epsilon greedy policy
 
@@ -27,9 +28,9 @@ def sarsa_lambda(env, lambd, QStar, num_episodes=NUM_EPISODES, gamma=GAMMA, No=N
     Q = defaultdict(lambda: np.zeros(len(env.action_space)))
 
     QStar_sa_count = len(QStar) * len(env.action_space)
-    mse = np.zeros(num_episodes)
+    mse = np.zeros(num_episodes // mse_update)
 
-    for episode in range(num_episodes):
+    for i in range(num_episodes):
         e = defaultdict(lambda: np.zeros(len(env.action_space)))
 
         state = env.reset()
@@ -37,7 +38,7 @@ def sarsa_lambda(env, lambd, QStar, num_episodes=NUM_EPISODES, gamma=GAMMA, No=N
         s_count[state] += 1
         epsilon = No / (No + s_count[state])
 
-        probs = utils.epsilon_greedy(state, Q, epsilon, len(env.action_space))
+        probs = utils.epsilon_greedy_table(state, Q, epsilon, len(env.action_space))
         actionIdx = np.random.choice(np.arange(len(probs)), p=probs)
         action = env.action_space[actionIdx]
 
@@ -50,7 +51,7 @@ def sarsa_lambda(env, lambd, QStar, num_episodes=NUM_EPISODES, gamma=GAMMA, No=N
             s_count[nextState] += 1
             epsilon = No / (No + s_count[nextState])
 
-            probs = utils.epsilon_greedy(nextState, Q, epsilon, len(env.action_space))
+            probs = utils.epsilon_greedy_table(nextState, Q, epsilon, len(env.action_space))
             nextActionIdx = np.random.choice(np.arange(len(probs)), p=probs)
             nextAction = env.action_space[nextActionIdx]
 
@@ -79,11 +80,11 @@ def sarsa_lambda(env, lambd, QStar, num_episodes=NUM_EPISODES, gamma=GAMMA, No=N
             state = nextState
             action = nextAction
             actionIdx = nextActionIdx
-
-        for s in QStar.keys():
-            for a in range(len(QStar[s])):
-                mse[episode] += (Q[s][a] - QStar[s][a]) ** 2
-        mse[episode] /= QStar_sa_count
+        if i % mse_update == 0:
+            for s in QStar.keys():
+                for a in range(len(QStar[s])):
+                    mse[i // mse_update] += (Q[s][a] - QStar[s][a]) ** 2
+            mse[i // mse_update] /= QStar_sa_count
 
     return Q, mse
 
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     QStar = pickle.load(open('Q.dill', 'rb'))
 
     lambds = list(np.arange(0, 1.1, 0.1))
-    mseLambdas = np.zeros((len(lambds), NUM_EPISODES))
+    mseLambdas = np.zeros((len(lambds), NUM_EPISODES // MSE_UPDATE))
     finalMSE = np.zeros(len(lambds))
 
     print("Training.")
@@ -104,7 +105,7 @@ if __name__ == "__main__":
         mseLambdas[i] = mse
         finalMSE[i] = mse[-1]
 
-        print(lambd)
+        print(f"Lambda {lambd}: Final MSE {mse[-1]}")
     print()
 
     print("Plotting.")

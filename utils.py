@@ -4,13 +4,13 @@ import numpy as np
 import seaborn as sns
 
 
-def epsilon_greedy(state, Q, epsilon, nA):
+def epsilon_greedy_table(state, Q, epsilon, nA):
     """
-    Uses an epsilon-greedy policy based on a given Q-function and epsilon to choose probability distribution of
+    Uses an epsilon-greedy policy based on a given Q-table and epsilon to choose probability distribution of
     actions based on a state
 
     :param state: the agent's view of the environment at one timestep
-    :param Q: state-action to value map
+    :param Q: state-action to value table
     :param epsilon: probability that the selects a random action, else a greedy action
     :param nA: number of possible actions
     :return: probability distribution of all actions for the state
@@ -19,7 +19,6 @@ def epsilon_greedy(state, Q, epsilon, nA):
     best_action = np.argmax(Q[state])
     A[best_action] += (1.0 - epsilon)
     return A
-
 
 def plotQ(Q, actions):
     """
@@ -69,7 +68,7 @@ def plotMseLambdas(mse, lambds):
     :param lambds: each lambda value
     """
 
-    plt.plot(lambds, msg)
+    plt.plot(lambds, mse)
     plt.title("Lambda vs MSE")
     plt.xlabel("Lambda")
     plt.ylabel("Mean Squared Error")
